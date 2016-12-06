@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -102,14 +103,24 @@ func (k *Keypad) move_by_direction(direction byte) *Keypad {
 func (k *Keypad) move(line []byte) *Keypad {
 	current := k
 	for _, character := range line {
-		current = current.move_by_direction(character)
+		if character != '\n' {
+			current = current.move_by_direction(character)
+		}
 	}
 	return current
 }
 
 func main() {
+	diamond_keymap := flag.Bool("diamond", false, "use diamond keymap")
+	flag.Parse()
+
 	reader := bufio.NewReader(os.Stdin)
-	keypad := generate_standard_keypad(5)
+	var keypad *Keypad
+	if *diamond_keymap {
+		keypad = generate_diamond_keypad(5)
+	} else {
+		keypad = generate_standard_keypad(5)
+	}
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err == io.EOF {
@@ -120,7 +131,7 @@ func main() {
 		}
 
 		keypad = keypad.move(line)
-		fmt.Print(keypad.number)
+		fmt.Printf("%c", keypad.number)
 	}
 	fmt.Print("\n")
 }
