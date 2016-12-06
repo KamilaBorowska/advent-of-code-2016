@@ -80,3 +80,19 @@ fn main() {
         IResult::Incomplete(_) => panic!("Incomplete input"),
     }
 }
+
+#[test]
+fn destination() {
+    let tests: [(&[u8], i32); 3] = [(b"R2, L3", 5), (b"R2, R2, R2", 2), (b"R5, L5, R5, R3", 12)];
+    for &(route, answer) in &tests {
+        assert_eq!(taxicab_distance(calculate_position(&road(route).unwrap().1)),
+                   answer);
+    }
+}
+
+#[test]
+fn duplicate() {
+    assert_eq!(first_duplicate(&[]), None);
+    assert_eq!(first_duplicate(&road(b"R8, R4, R4, R8").unwrap().1).map(taxicab_distance),
+               Some(4));
+}
