@@ -2,7 +2,7 @@ function inssort(arr, len,   i, j, value) {
 	for (i = 2; i <= len; i++) {
 		value = arr[i]
 		j = i - 1
-		while (j > 0 && array[j] > value) {
+		while (j > 0 && arr[j] > value) {
 			arr[j + 1] = arr[j]
 			j--
 		}
