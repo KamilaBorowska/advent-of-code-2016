@@ -36,6 +36,55 @@ func generate_standard_keypad(position int) *Keypad {
 	return &entries[position-1]
 }
 
+func generate_diamond_keypad(position int) *Keypad {
+	var layout [7][7]int
+	number := 0
+
+	for i := 1; i < 3; i++ {
+		for j := 4 - i; j < 3+i; j++ {
+			number++
+			layout[i][j] = number
+		}
+	}
+	for i := 3; i <= 5; i++ {
+		for j := i - 2; j < 9-i; j++ {
+			number++
+			layout[i][j] = number
+		}
+	}
+
+	var entries [13]Keypad
+	var requested_entry *Keypad
+	for i := range layout {
+		for j, number := range layout[i] {
+			if number == 0 {
+				continue
+			}
+			index := number - 1
+			entry := &entries[index]
+			digits := "123456789ABCD"
+			entry.number = digits[index]
+			if position == number {
+				requested_entry = entry
+			}
+
+			type Modifier struct {
+				x, y int
+			}
+			modifiers := []Modifier{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+			for k, modifier := range modifiers {
+				field := layout[i+modifier.x][j+modifier.y]
+				if field == 0 {
+					entry.steps[k] = entry
+				} else {
+					entry.steps[k] = &entries[field-1]
+				}
+			}
+		}
+	}
+	return requested_entry
+}
+
 func (k *Keypad) move_by_direction(direction byte) *Keypad {
 	switch direction {
 	case 'U':
