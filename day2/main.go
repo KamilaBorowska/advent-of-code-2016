@@ -7,37 +7,60 @@ import (
 	"os"
 )
 
-func move(position int, line []byte) int {
-	for _, character := range line {
-		switch character {
-		case 'U':
-			if position > 3 {
-				position -= 3
-			}
-		case 'D':
-			if position < 7 {
-				position += 3
-			}
-		case 'L':
-			if position%3 != 1 {
-				position--
-			}
-		case 'R':
-			if position%3 != 0 {
-				position++
-			}
-		case '\n':
-			// Do nothing
-		default:
-			panic(fmt.Sprintf("Unrecognized character: %c", character))
+type Keypad struct {
+	number byte
+	steps  [4]*Keypad
+}
+
+func generate_standard_keypad(position int) *Keypad {
+	var entries [9]Keypad
+	for i := range entries {
+		entry := &entries[i]
+		entry.number = byte(i) + '1'
+		for j := range entry.steps {
+			entry.steps[j] = entry
+		}
+		if i >= 3 {
+			entry.steps[0] = &entries[i-3]
+		}
+		if i < len(entries)-3 {
+			entry.steps[1] = &entries[i+3]
+		}
+		if i%3 != 0 {
+			entry.steps[2] = &entries[i-1]
+		}
+		if i%3 != 2 {
+			entry.steps[3] = &entries[i+1]
 		}
 	}
-	return position
+	return &entries[position-1]
+}
+
+func (k *Keypad) move_by_direction(direction byte) *Keypad {
+	switch direction {
+	case 'U':
+		return k.steps[0]
+	case 'D':
+		return k.steps[1]
+	case 'L':
+		return k.steps[2]
+	case 'R':
+		return k.steps[3]
+	}
+	return nil
+}
+
+func (k *Keypad) move(line []byte) *Keypad {
+	current := k
+	for _, character := range line {
+		current = current.move_by_direction(character)
+	}
+	return current
 }
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	position := 5
+	keypad := generate_standard_keypad(5)
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err == io.EOF {
@@ -47,8 +70,8 @@ func main() {
 			panic(err)
 		}
 
-		position = move(position, line)
-		fmt.Print(position)
+		keypad = keypad.move(line)
+		fmt.Print(keypad.number)
 	}
 	fmt.Print("\n")
 }
